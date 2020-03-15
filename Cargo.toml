@@ -1,0 +1,15 @@
+[package]
+name = "leveldb"
+version = "0.1.0"
+authors = ["Vincent Moret <moret.vincent@gmail.com>"]
+edition = "2018"
+description = "An interface for leveldb"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+libc = "0.2.67"
+leveldb-sys = { version = "2.0.5", features = ["snappy"] }
+
+[dev-dependencies]
+tempdir = "0.3.7"
