@@ -66,17 +66,20 @@ impl fmt::Debug for Error {
     }
 }
 
-impl std::convert::From<*mut i8> for Error {
-    fn from(message: *mut i8) -> Error {
-        use std::ffi::CStr;
-        use std::str::from_utf8;
+impl std::convert::From<&str> for Error {
+    fn from(message: &str) -> Error {
+        Self::Inner(message.to_string())
+    }
+}
 
-        let err_str = unsafe {
-            let s = from_utf8(CStr::from_ptr(message).to_bytes()).unwrap();
-            leveldb_free(message as *mut c_void);
-            s
-        };
-        Self::Inner(err_str.to_string())
+fn errptr_to_utf8(errptr: *mut i8) -> &'static str {
+    use std::ffi::CStr;
+    use std::str::from_utf8;
+
+    unsafe {
+        let s = from_utf8(CStr::from_ptr(errptr).to_bytes()).unwrap();
+        leveldb_free(errptr as *mut c_void);
+        s
     }
 }
 
@@ -1041,7 +1044,7 @@ impl DB {
             if errptr.is_null() {
                 Ok(DB::new(db))
             } else {
-                Err(Error::from(errptr))
+                Err(Error::from(errptr_to_utf8(errptr)))
             }
         }
     }
@@ -1066,7 +1069,7 @@ impl DB {
         if errptr.is_null() {
             Ok(())
         } else {
-            Err(Error::from(errptr))
+            Err(Error::from(errptr_to_utf8(errptr)))
         }
     }
 
@@ -1089,7 +1092,7 @@ impl DB {
         if errptr.is_null() {
             Ok(())
         } else {
-            Err(Error::from(errptr))
+            Err(Error::from(errptr_to_utf8(errptr)))
         }
     }
 
@@ -1114,7 +1117,7 @@ impl DB {
         if errptr.is_null() {
             Ok(())
         } else {
-            Err(Error::from(errptr))
+            Err(Error::from(errptr_to_utf8(errptr)))
         }
     }
 
@@ -1138,7 +1141,7 @@ impl DB {
         if errptr.is_null() {
             Ok(())
         } else {
-            Err(Error::from(errptr))
+            Err(Error::from(errptr_to_utf8(errptr)))
         }
     }
 
@@ -1155,7 +1158,7 @@ impl DB {
         if errptr.is_null() {
             Ok(())
         } else {
-            Err(Error::from(errptr))
+            Err(Error::from(errptr_to_utf8(errptr)))
         }
     }
 
@@ -1188,7 +1191,7 @@ impl DB {
                 None => vec![],
             })
         } else {
-            Err(Error::from(errptr))
+            Err(Error::from(errptr_to_utf8(errptr)))
         }
     }
 
