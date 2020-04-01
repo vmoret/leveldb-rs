@@ -4,7 +4,7 @@
 //!
 //! ```rust,ignore
 //! # use std::rc::Rc;
-//! 
+//! # 
 //! let mut options = leveldb::Options::default();
 //! options.create_if_missing = true;
 //! options.filter_policy = Rc::new(Box::new(leveldb::BloomFilterPolicyV2::new(10)));
@@ -264,10 +264,10 @@ impl fmt::Debug for Cache {
     }
 }
 
-// DB contents are stored in a set of blocks, each of which holds a
-// sequence of key,value pairs.  Each block may be compressed before
-// being stored in a file.  The following enum describes which
-// compression method (if any) is used to compress a block.
+/// DB contents are stored in a set of blocks, each of which holds a
+/// sequence of key,value pairs.  Each block may be compressed before
+/// being stored in a file.  The following enum describes which
+/// compression method (if any) is used to compress a block.
 pub enum CompressionType {
     None,
     Snappy,
@@ -282,20 +282,28 @@ impl fmt::Debug for CompressionType {
     }
 }
 
-// A database can be configured with a custom FilterPolicy object.
-// This object is responsible for creating a small filter from a set
-// of keys.  These filters are stored in leveldb and are consulted
-// automatically by leveldb to decide whether or not to read some
-// information from disk. In many cases, a filter can cut down the
-// number of disk seeks form a handful to a single disk seek per
-// DB::Get() call.
-//
-// Most people will want to use the builtin bloom filter support.
+/// A database can be configured with a custom FilterPolicy object.
+/// This object is responsible for creating a small filter from a set
+/// of keys.  These filters are stored in leveldb and are consulted
+/// automatically by leveldb to decide whether or not to read some
+/// information from disk. In many cases, a filter can cut down the
+/// number of disk seeks form a handful to a single disk seek per
+/// DB::Get() call.
+///
+/// Most people will want to use the builtin bloom filter support.
 pub trait FilterPolicy {
+    /// Return the name of this policy.  
+    ///
+    /// Note that if the filter encoding changes in an incompatible way, the name returned by this
+    /// method must be changed.  Otherwise, old incompatible filters may be passed to methods of this
+    /// type.
     fn name(&self) -> String;
+
+    /// Returns the pointer to the inner `leveldb_filterpolicy_t`.
     fn as_ptr(&self) -> *mut leveldb_filterpolicy_t;
 }
 
+/// A filter policy that is a noop.
 pub struct NoFilterPolicy;
 
 impl FilterPolicy for NoFilterPolicy {
@@ -313,6 +321,15 @@ impl fmt::Debug for NoFilterPolicy {
     }
 }
 
+/// A filter policy that uses a bloom filter with approximately the specified number of bits per key.
+///
+/// Note that if you are using a custom comparator that ignores some parts of the keys being compared,
+/// you must not use `BloomFilterPolicy::new()` and must provide your own [`FilterPolicy`] that also
+/// ignores the corresponding parts of the keys.  For example, if the comparator ignores trailing
+/// spaces, it would be incorrect to use a [`FilterPolicy`] (like `BloomFilterPolicy`) that does not
+/// ignore trailing spaces in keys.
+///
+/// [`FilterPolicy`]: ./trait.FilterPolicy.html
 pub struct BloomFilterPolicyV2 {
     ptr: *mut leveldb_filterpolicy_t,
     bits_per_key: c_int,
@@ -321,6 +338,12 @@ pub struct BloomFilterPolicyV2 {
 impl BloomFilterPolicyV2 {
     pub(crate) const NAME: &'static str = "leveldb.BuiltinBloomFilter2";
 
+    /// Creates a new filter policy that uses a bloom filter with approximately the specified bites
+    /// per key.
+    ///
+    /// A good value for `bits_per_key` is 10, which yields a filter with ~ 1% false positive rate.
+    ///
+    /// Callers must delete the result after any database that is using the result has been closed.
     pub fn new(bits_per_key: i32) -> Self {
         Self {
             ptr: unsafe { leveldb_filterpolicy_create_bloom(bits_per_key as c_int) },
@@ -384,6 +407,7 @@ impl fmt::Debug for Snapshot {
 pub struct Options {
     // -------------------
     // Parameters that affect behavior
+    //
     /// Comparator used to define the order of keys in the table.
     /// Default: a comparator that uses lexicographic byte-wise ordering
     ///
@@ -417,6 +441,7 @@ pub struct Options {
 
     // -------------------
     // Parameters that affect performance
+    //
     /// Amount of data to build up in memory (backed by an unsorted log
     /// on disk) before converting to a sorted on-disk file.
     ///
@@ -434,6 +459,7 @@ pub struct Options {
 
     // Control over blocks (user data is stored in a set of blocks, and
     // a block is the unit of reading from disk).
+    //
     /// If non-null, use the specified cache for blocks.
     /// If null, leveldb will automatically create and use an 8MB internal cache.
     pub block_cache: Option<Cache>,
@@ -611,6 +637,7 @@ impl fmt::Debug for ReadOptions {
     }
 }
 
+/// Options that control write operations
 pub struct WriteOptions {
     /// If true, the write will be flushed from the operating system
     /// buffer cache (by calling WritableFile::Sync()) before the write
@@ -832,8 +859,7 @@ impl fmt::Debug for WriteBatch {
     }
 }
 
-/// A trait implemented by object that can iterator over written batches and
-/// check their validity.
+/// A trait implemented by object that can iterate over written batches and check their validity.
 pub trait WriteBatchIter {
     /// Callback for put items
     fn put(&mut self, key: &[u8], value: &[u8]);
