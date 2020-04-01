@@ -3,32 +3,30 @@
 //! Usage:
 //!
 //! ```rust,ignore
-//! use std::rc::Rc;
+//! # use std::rc::Rc;
 //! 
-//! fn main() {
-//!     let mut options = leveldb::Options::default();
-//!     options.create_if_missing = true;
-//!     options.filter_policy = Rc::new(Box::new(leveldb::BloomFilterPolicyV2::new(10)));
-//!     let mut db = leveldb::DB::open("tempdb", Some(options)).unwrap();
+//! let mut options = leveldb::Options::default();
+//! options.create_if_missing = true;
+//! options.filter_policy = Rc::new(Box::new(leveldb::BloomFilterPolicyV2::new(10)));
+//! let mut db = leveldb::DB::open("tempdb", Some(options)).unwrap();
 //! 
-//!     // add a key-value pair
-//!     let options = leveldb::WriteOptions::default();
-//!     db.put(&options, b"foo", b"bar").unwrap();
+//! // add a key-value pair
+//! let options = leveldb::WriteOptions::default();
+//! db.put(&options, b"foo", b"bar").unwrap();
 //! 
-//!     // get the value of the created value
-//!     let options = leveldb::ReadOptions::default();
-//!     let value = db.get(&options, b"foo").unwrap();
+//! // get the value of the created value
+//! let options = leveldb::ReadOptions::default();
+//! let value = db.get(&options, b"foo").unwrap();
 //! 
-//!     // iterate over the keys-value pairs
-//!     println!("Value = {:?}", value);
-//!     for k in db.iter(&options) {
-//!         println!("item = {:?}", k);
-//!     }
-//! 
-//!     // delete the created key
-//!     let options = leveldb::WriteOptions::default();
-//!     db.delete(&options, b"foo").unwrap();
+//! // iterate over the keys-value pairs
+//! println!("Value = {:?}", value);
+//! for k in db.iter(&options) {
+//!     println!("item = {:?}", k);
 //! }
+//! 
+//! // delete the created key
+//! let options = leveldb::WriteOptions::default();
+//! db.delete(&options, b"foo").unwrap();
 //! ```
 
 extern crate leveldb_sys;
