@@ -676,7 +676,7 @@ impl Bytes {
             Some(unsafe {
                 Self {
                     bytes: &mut *ptr,
-                    size: size,
+                    size,
                     marker: Default::default(),
                 }
             })
@@ -759,6 +759,12 @@ impl From<Bytes> for Box<[u8]> {
 /// external synchronization.
 pub struct WriteBatch {
     ptr: *mut leveldb_writebatch_t,
+}
+
+impl Default for WriteBatch {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl WriteBatch {
@@ -1032,7 +1038,7 @@ impl DB {
                 &mut errptr,
             );
             leveldb_options_destroy(o);
-            if errptr == ptr::null_mut() {
+            if errptr.is_null() {
                 Ok(DB::new(db))
             } else {
                 Err(Error::from(errptr))
@@ -1057,7 +1063,7 @@ impl DB {
             );
             leveldb_options_destroy(o);
         }
-        if errptr == ptr::null_mut() {
+        if errptr.is_null() {
             Ok(())
         } else {
             Err(Error::from(errptr))
@@ -1080,7 +1086,7 @@ impl DB {
             );
             leveldb_options_destroy(o);
         }
-        if errptr == ptr::null_mut() {
+        if errptr.is_null() {
             Ok(())
         } else {
             Err(Error::from(errptr))
@@ -1105,7 +1111,7 @@ impl DB {
             );
             leveldb_writeoptions_destroy(o);
         }
-        if errptr == ptr::null_mut() {
+        if errptr.is_null() {
             Ok(())
         } else {
             Err(Error::from(errptr))
@@ -1129,7 +1135,7 @@ impl DB {
             );
             leveldb_writeoptions_destroy(o);
         }
-        if errptr == ptr::null_mut() {
+        if errptr.is_null() {
             Ok(())
         } else {
             Err(Error::from(errptr))
@@ -1146,7 +1152,7 @@ impl DB {
             leveldb_write(self.ptr, o, updates.as_ptr(), &mut errptr);
             leveldb_writeoptions_destroy(o);
         }
-        if errptr == ptr::null_mut() {
+        if errptr.is_null() {
             Ok(())
         } else {
             Err(Error::from(errptr))
@@ -1160,7 +1166,7 @@ impl DB {
     /// a status for which Status::IsNotFound() returns true.
     ///
     /// May return some other Status on an error.
-    pub fn get(&mut self, options: &ReadOptions, key: &[u8]) -> Result<Vec<u8>, Error> {
+    pub fn get(&self, options: &ReadOptions, key: &[u8]) -> Result<Vec<u8>, Error> {
         let mut errptr = ptr::null_mut();
         let mut vallen: usize = 0;
         let result = unsafe {
@@ -1176,7 +1182,7 @@ impl DB {
             leveldb_readoptions_destroy(o);
             result as *mut u8
         };
-        if errptr == ptr::null_mut() {
+        if errptr.is_null() {
             Ok(match Bytes::from_raw(result, vallen) {
                 Some(bytes) => bytes.to_vec(),
                 None => vec![],

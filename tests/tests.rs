@@ -93,7 +93,7 @@ fn test_writebatch() {
     let mut options = Options::default();
     options.create_if_missing = true;
     let tmpdir = TempDir::new("writebatch").unwrap();
-    let mut db = DB::open(tmpdir.path(), Some(options)).unwrap();
+    let db = DB::open(tmpdir.path(), Some(options)).unwrap();
 
     let mut batch = WriteBatch::new();
     batch.put(&[1u8], &[1u8]);
@@ -164,7 +164,7 @@ fn test_snapshot() {
     let mut options = Options::default();
     options.create_if_missing = true;
     let tmpdir = TempDir::new("snapshot").unwrap();
-    let mut db = DB::open(tmpdir.path(), Some(options)).unwrap();
+    let db = DB::open(tmpdir.path(), Some(options)).unwrap();
 
     let options = WriteOptions::default();
     db.put(&options, &[1u8], &[1u8]).unwrap();
