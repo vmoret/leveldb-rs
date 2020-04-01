@@ -121,7 +121,7 @@ impl fmt::Debug for Env {
 /// used as keys in an sstable or a database.  A Comparator implementation
 /// must be thread-safe since leveldb may invoke its methods concurrently
 /// from multiple threads.
-pub trait Comparator {
+pub trait Comparator: fmt::Debug {
     /// Three-way comparison.
     fn compare(&self, a: &[u8], b: &[u8]) -> Ordering;
 
@@ -190,6 +190,12 @@ fn create_comparator<C: Comparator>(c: Box<&C>) -> *mut leveldb_comparator_t {
 
 /// Comparator comparing keys in reverse order.
 pub struct ReverseComparator;
+
+impl fmt::Debug for ReverseComparator {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "ReverseComparator")
+    }
+}       
 
 impl Comparator for ReverseComparator {
     fn name(&self) -> *const c_char {
@@ -291,7 +297,7 @@ impl fmt::Debug for CompressionType {
 /// DB::Get() call.
 ///
 /// Most people will want to use the builtin bloom filter support.
-pub trait FilterPolicy {
+pub trait FilterPolicy : fmt::Debug {
     /// Return the name of this policy.  
     ///
     /// Note that if the filter encoding changes in an incompatible way, the name returned by this
@@ -569,11 +575,12 @@ impl Default for Options {
 impl fmt::Debug for Options {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Options")
-            // TODO(vimo) add comparator
+            .field("comparator", &self.comparator)
             .field("create_if_missing", &self.create_if_missing)
             .field("error_if_exists", &self.error_if_exists)
             .field("paranoid_checks", &self.paranoid_checks)
-            // TODO(vimo) add env & info_log
+            .field("env", &self.env)
+            .field("info_log", &self.info_log)
             .field("write_buffer_size", &self.write_buffer_size)
             .field("max_open_files", &self.max_open_files)
             .field("block_cache", &self.block_cache)
@@ -582,7 +589,7 @@ impl fmt::Debug for Options {
             .field("max_file_size", &self.max_file_size)
             .field("compression", &self.compression)
             .field("reuse_logs", &self.reuse_logs)
-            // TODO(vimo) add filter policy
+            .field("filter_policy", &self.filter_policy)
             .finish()
     }
 }
